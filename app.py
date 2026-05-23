@@ -8,6 +8,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 import pandas as pd
 from streamlit_geolocation import streamlit_geolocation
+from PIL import Image
 
 # --- SECURE API LOADING ---
 load_dotenv()
@@ -29,9 +30,12 @@ def get_advice(score):
     else:
         return random.choice(["Stargazing is currently impossible. Perfect time to clean your lenses!", "Dealbreaker conditions. Stay inside and study star charts."])
 
+im = Image.open("Skysensio_logo.png")
+
 # --- UI CONFIGURATION & CSS ANIMATION ---
 st.set_page_config(
     page_title="Skysensio Dashboard", 
+    page_icon=im,
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -207,7 +211,7 @@ st.divider()
 
 # --- SIDEBAR: THE LOGIN GATE ---
 with st.sidebar:
-    st.title("Skysensio COMP9001")
+    st.sidebar.image("Skysensio_logo.png", width=200, caption="SKYSENSIO - COMP9001")
     st.markdown("---")
     st.markdown("**Version 1.0**")
     
