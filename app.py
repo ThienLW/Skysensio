@@ -149,7 +149,7 @@ def set_background():
         opacity: 0.7 !important;   
         font-style: italic !important; 
     }
-    /* --- HIDE THE UGLY GEOLOCATION TEXT BOX --- */
+    /* --- HIDE THE GEOLOCATION TEXT BOX --- */
     [data-testid="stSidebar"] iframe {
         width: 44px !important;  
         height: 44px !important; 
@@ -164,6 +164,18 @@ def set_background():
     [data-testid="stSidebar"] iframe:hover {
         box-shadow: 0 0 20px rgba(147, 197, 253, 0.9) !important;
         transform: scale(1.05);
+    }
+    /* --- FIX THE WHITE SPINNERS --- */
+    div[data-testid="stSpinner"] > div {
+        background-color: #0F172A !important;
+        border: 1px solid #38BDF8 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.3) !important;
+    }
+    div[data-testid="stSpinner"] p {
+        color: #7DD3FC !important;
+        font-family: monospace !important; /* Gives the raw python text a cool terminal look */
+        font-weight: 500 !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -183,6 +195,10 @@ if 'current_user' not in st.session_state:
     st.session_state.current_user = ""
 if 'current_pin' not in st.session_state:
     st.session_state.current_pin = ""
+
+# Session variable to reset the GPS button
+if 'gps_visible' not in st.session_state:
+    st.session_state.gps_visible = True
 
 # --- MAIN TITLE (Renders for everyone) ---
 st.title("Skysensio: Stop Guessing, Start Gazing")
@@ -222,7 +238,7 @@ with st.sidebar:
 
 # --- THE SECURITY WALL ---
 if not st.session_state.authenticated:
-    st.info("🔒 Please log in using the sidebar to access the observatory dashboard and your personal logbook.")
+    st.info("Please log in using the sidebar to access the observatory dashboard and your personal logbook.", icon=":material/lock:")
     st.stop() # This halts the entire app here if they aren't logged in!
 
 # =====================================================================
@@ -252,6 +268,10 @@ with st.sidebar:
             with st.spinner("Scanning coordinates..."):
                 st.session_state.search_results = logic.search_location(city_input, API_KEY)
                 st.session_state.active_location = None  
+                
+                # Briefly hide the GPS button to permanently wipe its memory
+                st.session_state.gps_visible = False
+                
                 if not st.session_state.search_results:
                     st.warning("No matches found.")
         else:
@@ -263,7 +283,13 @@ with st.sidebar:
     
     col1, col2, col3 = st.columns([2, 1, 2])
     with col2:
-        location = streamlit_geolocation()
+        if st.session_state.gps_visible:
+            # Load the component normally without the 'key' argument
+            location = streamlit_geolocation()
+        else:
+            # Provide empty data while it is hidden, and immediately turn it back on
+            location = {'latitude': None, 'longitude': None}
+            st.session_state.gps_visible = True
     
     if location['latitude'] is not None and location['longitude'] is not None:
         with st.spinner("Analyzing local sky coordinates..."):
@@ -308,40 +334,57 @@ with tab1:
         # --- THE ENGINE ---
         if st.session_state.active_location:
             selected_loc = st.session_state.active_location
+            exact_coords = f"{selected_loc['lat']},{selected_loc['lon']}"
             
-            with st.spinner('Calculating atmospheric thermodynamics...'):
-                try:
-                    exact_coords = f"{selected_loc['lat']},{selected_loc['lon']}"
-                    
-                    weather_data = logic.get_weather(exact_coords, API_KEY)
-                    score = logic.calculate_score(weather_data)
-                    
-                    loc_time = datetime.strptime(weather_data['location']['localtime'], "%Y-%m-%d %H:%M").strftime("%d/%m/%Y %H:%M")
-                    advice = get_advice(score)
-                    
-                    st.markdown("---")
-                    st.markdown(f"#### Stargazing Analysis for {selected_loc['name']}")
-                    
-                    col1, col2, col3 = st.columns(3)
-                    col1.metric("Location", selected_loc['name'], f"{selected_loc['country']}")
-                    col2.metric("Local Date", loc_time.split(" ")[0], loc_time.split(" ")[1])
-                    col3.metric("Observing Score", f"{score}/10")
-                    
-                    st.markdown("---")
-                    
-                    with st.expander("Final Advice & Details", expanded=True):
-                        st.markdown(f"**Advice:** {advice}")
-                    
-                    st.markdown(" ") 
-                    if st.button("Save Observation to Logbook"):
-                        full_location = f"{selected_loc['name']}, {selected_loc['country']}"
+            # 1. Check if we need to run the API, or if we already memorized it!
+            if 'last_coords' not in st.session_state or st.session_state.last_coords != exact_coords:
+                with st.spinner('Calculating atmospheric thermodynamics...'):
+                    try:
+                        weather_data = logic.get_weather(exact_coords, API_KEY)
+                        score = logic.calculate_score(weather_data)
+                        loc_time = datetime.strptime(weather_data['location']['localtime'], "%Y-%m-%d %H:%M").strftime("%d/%m/%Y %H:%M")
+                        advice = get_advice(score)
                         
-                        # We securely save using the locked-in session variables
-                        data.save_log(full_location, score, st.session_state.current_user, st.session_state.current_pin)
-                        st.toast("Observation securely logged!", icon=":material/check_circle:")
+                        # Save the calculation results into session memory
+                        st.session_state.current_analysis = {
+                            "score": score,
+                            "loc_time": loc_time,
+                            "advice": advice
+                        }
+                        # Update the memorized coordinates
+                        st.session_state.last_coords = exact_coords
                         
-                except Exception as e:
-                    st.error(f"Error during analysis: {e}")
+                    except Exception as e:
+                        st.error(f"Error during analysis: {e}")
+                        st.stop() # Halts execution if the API fails
+            
+            # 2. Render the UI using the memorized data (No spinner on re-runs!)
+            if 'current_analysis' in st.session_state:
+                analysis = st.session_state.current_analysis
+                score = analysis["score"]
+                loc_time = analysis["loc_time"]
+                advice = analysis["advice"]
+                
+                st.markdown("---")
+                st.markdown(f"#### Stargazing Analysis for {selected_loc['name']}")
+                
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Location", selected_loc['name'], f"{selected_loc['country']}")
+                col2.metric("Local Date", loc_time.split(" ")[0], loc_time.split(" ")[1])
+                col3.metric("Observing Score", f"{score}/10")
+                
+                st.markdown("---")
+                
+                with st.expander("Final Advice & Details", expanded=True):
+                    st.markdown(f"**Advice:** {advice}")
+                
+                st.markdown(" ") 
+                if st.button("Save Observation to Logbook"):
+                    full_location = f"{selected_loc['name']}, {selected_loc['country']}"
+                    
+                    # We securely save using the locked-in session variables
+                    data.save_log(full_location, score, st.session_state.current_user, st.session_state.current_pin)
+                    st.toast("Observation securely logged!", icon=":material/check_circle:")
     else:
         st.info("Use the sidebar to search for a city and begin your analysis.")
 
