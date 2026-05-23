@@ -1,0 +1,6 @@
+streamlit
+streamlit-gsheets
+streamlit-geolocation
+pandas
+requests
+python-dotenv

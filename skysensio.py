@@ -44,24 +44,6 @@ def get_advice(score):
     # random.choice() automatically picks one item from the list
     return random.choice(advice_options)
 
-def get_random_fact():
-    """Reads a text file of space facts and returns one at random."""
-    try:
-        # Open the file in read mode ('r')
-        with open("space_facts.txt", "r", encoding="utf-8") as file:
-            # Read all lines into a list
-            facts = file.readlines()
-            
-            # Clean up the list by removing invisible newline characters (\n) and blank lines
-            clean_facts = [fact.strip() for fact in facts if fact.strip()]
-            
-            # Return one random fact
-            return random.choice(clean_facts)
-            
-    except FileNotFoundError:
-        # Defensive coding: If the file is missing, provide a safe default so the app doesn't crash
-        return "Did you know? The universe is vast and full of mysteries!"
-
 def main():
     print("Welcome to Skysensio: The Stargazer's Logbook")
     
@@ -131,7 +113,7 @@ def main():
                 else:
                     selected_loc = search_results[0]
                 
-                # We use the exact latitude and longitude to guarantee 100% accuracy
+                # Use the exact latitude and longitude to guarantee 100% accuracy
                 exact_coords = f"{selected_loc['lat']},{selected_loc['lon']}"
                 
                 print(f"\nFetching live weather for {selected_loc['name']}...\n")
@@ -147,7 +129,7 @@ def main():
                 
                 # Get the randomized advice, and the fact from the text file
                 advice = get_advice(score)
-                space_fact = get_random_fact()
+                space_fact = data.get_random_fact()
                 
                 # Printing the dashboard
                 print("-" * 55)
