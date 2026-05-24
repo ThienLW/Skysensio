@@ -7,6 +7,14 @@
 ## Overview
 Skysensio is a data-driven stargazing dashboard that analyzes real-time atmospheric thermodynamics to provide precise observing recommendations. Built with a dual-engine architecture, it offers both a rich, interactive web interface and a lightweight, offline-capable terminal application.
 
+## Live Demo (Recommended)
+
+Want to skip the installation and jump straight into the stars? The easiest way to experience the full Skysensio dashboard is through our live, cloud-deployed web application. It requires zero setup and works instantly on any device:
+
+**[www.skysensio.space](https://www.skysensio.space)**
+
+---
+
 ## Core Features
 * **Dual-Engine Architecture:** Runs as a responsive web dashboard or a robust command-line tool.
 * **Live Atmospheric Analysis:** Integrates with real-time weather APIs to calculate a custom 1-10 "Observing Score".
@@ -32,6 +40,7 @@ Ensure you are in the project root directory.
 Install the required packages using the included requirements file:
 ```bash
 pip install -r requirements.txt
+```
 
 ---
 
@@ -45,7 +54,7 @@ This option launches the complete graphical interface. It includes the interacti
 To launch the web app, open your terminal, ensure you are in the project folder, and run:
 ```bash
 streamlit run app.py
-
+```
 
 ### Option 2: The Terminal Engine (Lightweight Mode)
 This option runs the streamlined, text-based version of the application directly in your console. It deliberately bypasses the web server and cloud database, executing the core atmospheric logic and safely saving your observations to a local history.csv file instead.
@@ -53,6 +62,6 @@ This option runs the streamlined, text-based version of the application directly
 **Important:** Even in Lightweight Mode, the engine requires live atmospheric data to calculate observing scores. Ensure your `.env` file is properly configured with your `WEATHER_API_KEY` before launching (python-dotenv).
 
 To run the terminal app, use the standard Python command:
-
-Bash
+```bash
 python skysensio.py
+```
