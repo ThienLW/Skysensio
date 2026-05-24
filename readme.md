@@ -1,7 +1,8 @@
 # Skysensio: Stop Guessing, Start Gazing
 
-**Course:** COMP9001 
-**Author:** Thanh Thien Tran (Thiên)
+**Course:** COMP9001
+
+**Author:** Thanh Thien Tran
 
 ## Overview
 Skysensio is a data-driven stargazing dashboard that analyzes real-time atmospheric thermodynamics to provide precise observing recommendations. Built with a dual-engine architecture, it offers both a rich, interactive web interface and a lightweight, offline-capable terminal application.
