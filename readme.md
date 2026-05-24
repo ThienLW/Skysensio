@@ -50,6 +50,8 @@ streamlit run app.py
 ### Option 2: The Terminal Engine (Lightweight Mode)
 This option runs the streamlined, text-based version of the application directly in your console. It deliberately bypasses the web server and cloud database, executing the core atmospheric logic and safely saving your observations to a local history.csv file instead.
 
+**Important:** Even in Lightweight Mode, the engine requires live atmospheric data to calculate observing scores. Ensure your `.env` file is properly configured with your `WEATHER_API_KEY` before launching (python-dotenv).
+
 To run the terminal app, use the standard Python command:
 
 Bash
